@@ -289,7 +289,7 @@
             <div class="metric"><dt>Matura ’26</dt><dd>${matInd != null ? fmt(matInd, 0) : '—'}<small> rank ${matRank ?? '—'}</small></dd></div>
           </dl>
           <div class="section"><h3>Opis</h3><p>${esc(s.summary || '—')}</p></div>
-          <div class="section"><h3>Dlaczego dla syna</h3><p>${esc(s.why || '—')}</p></div>
+          <div class="section"><h3>Dlaczego dla Mikołaja</h3><p>${esc(s.why || '—')}</p></div>
           <div class="section"><h3>Na co uważać</h3><p>${esc(s.watch || '—')}</p></div>
           <div class="section"><h3>Najlepsze klasy</h3><div class="classes">${classes}</div></div>
           ${commuteSectionHtml(s)}
@@ -910,7 +910,7 @@
         </dl>
       </div>
       <div class="section"><h3>Opis</h3><p>${esc(s.summary || '—')}</p></div>
-      <div class="section"><h3>Dlaczego dla syna</h3><p>${esc(s.why || '—')}</p></div>
+      <div class="section"><h3>Dlaczego dla Mikołaja</h3><p>${esc(s.why || '—')}</p></div>
       <div class="section"><h3>Na co uważać</h3><p>${esc(s.watch || '—')}</p></div>
       ${commuteSectionHtml(s)}
       <div class="section"><h3>Wszystkie klasy (${s.classes.length})</h3><div class="detail-classes">${classes}</div></div>
