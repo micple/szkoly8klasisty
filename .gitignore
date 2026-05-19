@@ -26,3 +26,11 @@ wyniki lata przeszle/
 # Outputs to plik xlsx — chcemy go w repo, więc nie ignoruj
 # (zostaw odkomentowane, jeśli kiedyś chcesz ignorować:
 # outputs/*.xlsx)
+
+# Klucze API — NIGDY do repo. Lokalnie używamy site-v2/config.local.js,
+# produkcja (GitHub Pages) wstrzykuje klucz przez GitHub Actions secret.
+config.local.js
+
+# docs/ jest teraz budowany przez GitHub Actions (.github/workflows/deploy.yml),
+# nie commitujemy lokalnego buildu.
+docs/
