@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Backupy i logi
+*.bak
+*.log
+scripts/.firecrawl/
+scripts/*.output
+scripts/*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Sklonowane referencje (nie nasze)
+awesome-claude-design/
+
+# Tymczasowe
+wyniki lata przeszle/
+
+# Outputs to plik xlsx — chcemy go w repo, więc nie ignoruj
+# (zostaw odkomentowane, jeśli kiedyś chcesz ignorować:
+# outputs/*.xlsx)

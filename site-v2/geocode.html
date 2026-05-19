@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geocode szkół · Szkoły dla syna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;background:#FBF9F4;color:#1F1B16;font-family:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:1.5}
+    header{padding:24px 32px 16px;border-bottom:1px solid #DCD3BD}
+    h1{font-family:'Fraunces',serif;font-weight:400;font-variation-settings:'opsz' 72;margin:0 0 6px;font-size:32px;letter-spacing:-.01em}
+    h1 em{font-style:italic;color:#B5631F}
+    .lead{margin:0;color:#6B6258;max-width:60ch}
+    .toolbar{display:flex;gap:10px;align-items:center;padding:14px 32px;background:rgba(251,249,244,.9);border-bottom:1px solid #DCD3BD;position:sticky;top:0;z-index:5;backdrop-filter:blur(10px)}
+    button{font:inherit;border:1px solid #DCD3BD;background:#fff;color:#1F1B16;padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s,transform .12s}
+    button:hover{background:#FAF6EC;border-color:#C9BEA3}
+    button.primary{background:#1F1B16;color:#FFFEFB;border-color:#1F1B16}
+    button.primary:hover{background:#7A4011;border-color:#7A4011;transform:translateY(-1px)}
+    button:disabled{opacity:.45;cursor:not-allowed;transform:none;background:#fff;color:#1F1B16}
+    .progress{margin-left:auto;color:#6B6258;font-family:'JetBrains Mono',monospace;font-size:12px}
+    main{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:24px;padding:24px 32px}
+    @media (max-width:1100px){main{grid-template-columns:1fr}}
+    .panel{background:#fff;border:1px solid #DCD3BD;border-radius:14px;overflow:hidden;box-shadow:0 1px 0 rgba(31,27,22,.04)}
+    .panel-head{padding:14px 18px;border-bottom:1px solid #ECE5D4;display:flex;align-items:baseline;justify-content:space-between}
+    .panel-head h2{font-family:'Fraunces',serif;font-weight:420;font-size:18px;margin:0}
+    .panel-head .meta{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8A7F70;font-weight:600}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #ECE5D4}
+    th{background:#FAF6EC;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A7F70;font-weight:600;position:sticky;top:0}
+    td.num{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#3D362C;font-feature-settings:'tnum'}
+    tr.ok td{background:#F4FAEC}
+    tr.err td{background:#FCEBE3}
+    tr.skip td{color:#8A7F70}
+    .status{display:inline-block;font-weight:700;font-family:'JetBrains Mono',monospace;font-size:13px}
+    .status.ok{color:#3C6A4D}
+    .status.err{color:#8E2F1E}
+    .status.skip{color:#8A7F70}
+    .status.pending{color:#C99A2E}
+    .name{font-weight:500;color:#1F1B16}
+    .addr{color:#6B6258;font-size:12px}
+    #miniMap{width:100%;height:540px;background:#F2E6CB;border-radius:0}
+    .log{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:#1F1B16;color:#E9E1CC;padding:14px 18px;border-radius:10px;max-height:200px;overflow:auto;margin:0 32px 24px;white-space:pre-wrap}
+    .banner{padding:14px 18px;background:#FBE6D0;border:1px solid #E2C49A;color:#7A4011;border-radius:10px;margin:14px 32px 0;font-size:13.5px}
+    .banner b{font-weight:600}
+    .empty-map{display:grid;place-items:center;height:540px;color:#8A7F70;font-style:italic;font-family:'Fraunces',serif;font-size:18px;font-variation-settings:'opsz' 36}
+    code{font-family:'JetBrains Mono',monospace;font-size:12px;background:#F4E4D0;color:#7A4011;padding:1px 6px;border-radius:4px}
+    kbd{font-family:'JetBrains Mono',monospace;background:#fff;border:1px solid #DCD3BD;border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:11px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Geocode <em>31 szkół</em></h1>
+    <p class="lead">Jednorazowe narzędzie: pobiera współrzędne (lat/lng) z Google Geocoding API dla każdej szkoły, żebyś mógł je wkleić do <code>site/data.js</code>. Czas pracy ~10 sekund. Wykonaj raz, używaj wielokrotnie.</p>
+  </header>
+
+  <div id="noKeyBanner" class="banner" hidden>
+    <b>Brak klucza Google Maps.</b> Utwórz <code>site-v2/config.local.js</code> z prawdziwym kluczem API. Patrz <code>SETUP.md</code>.
+  </div>
+
+  <div class="toolbar">
+    <button class="primary" id="goBtn">▶ Geocode all</button>
+    <button id="downloadBtn" disabled>⬇ Pobierz data.js</button>
+    <button id="resetBtn">↻ Wyczyść wyniki</button>
+    <span class="progress" id="progress">—</span>
+  </div>
+
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Tabela szkół</h2>
+        <span class="meta" id="tableMeta">—</span>
+      </div>
+      <div style="max-height:560px;overflow:auto">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th>Szkoła</th>
+              <th>Adres znaleziony</th>
+              <th class="num" style="width:130px">lat, lng</th>
+              <th style="width:70px">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Mini-mapa</h2>
+        <span class="meta">sprawdź czy pinezki są w sensownych miejscach</span>
+      </div>
+      <div id="miniMap"><div class="empty-map">Ładuję mapę…</div></div>
+    </section>
+  </main>
+
+  <pre class="log" id="log"></pre>
+
+  <script src="config.local.js" onerror="document.getElementById('noKeyBanner').hidden=false"></script>
+  <script src="../site/data.js"></script>
+  <script>
+    'use strict';
+
+    const KEY = window.GMAPS_API_KEY;
+    if (!KEY || KEY === 'TWOJ_KLUCZ_TUTAJ') {
+      document.getElementById('noKeyBanner').hidden = false;
+      document.getElementById('goBtn').disabled = true;
+    }
+
+    const SCHOOLS = window.SCHOOLS || [];
+    const tbody = document.getElementById('tbody');
+    const logEl = document.getElementById('log');
+    const progressEl = document.getElementById('progress');
+    const goBtn = document.getElementById('goBtn');
+    const dlBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const tableMeta = document.getElementById('tableMeta');
+
+    let geocoder = null;
+    let map = null;
+    const markers = [];
+    let running = false;
+
+    function log(msg) {
+      const t = new Date().toTimeString().slice(0, 8);
+      logEl.textContent += `[${t}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function renderTable() {
+      tbody.innerHTML = SCHOOLS.map((s, i) => {
+        const hasCoords = typeof s.lat === 'number' && typeof s.lng === 'number';
+        const rowCls = hasCoords ? 'ok' : '';
+        const statusHtml = hasCoords
+          ? `<span class="status ok">✓</span>`
+          : `<span class="status pending">⏳</span>`;
+        const latlng = hasCoords ? `${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}` : '—';
+        const addr = s._foundAddress || '';
+        return `<tr class="${rowCls}" data-row="${i}">
+          <td>${i + 1}</td>
+          <td><div class="name">${escapeHtml(s.school)}</div><div class="addr">${escapeHtml(s.district)}</div></td>
+          <td class="addr">${escapeHtml(addr)}</td>
+          <td class="num">${latlng}</td>
+          <td>${statusHtml}</td>
+        </tr>`;
+      }).join('');
+      const done = SCHOOLS.filter(s => typeof s.lat === 'number').length;
+      tableMeta.textContent = `${done} / ${SCHOOLS.length}`;
+      progressEl.textContent = `${done} / ${SCHOOLS.length}`;
+      dlBtn.disabled = done === 0;
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function setRow(i, { status, address, lat, lng }) {
+      const s = SCHOOLS[i];
+      if (lat != null && lng != null) {
+        s.lat = lat;
+        s.lng = lng;
+      }
+      if (address) s._foundAddress = address;
+      const tr = tbody.querySelector(`tr[data-row="${i}"]`);
+      if (!tr) return;
+      tr.className = status === 'ok' ? 'ok' : (status === 'err' ? 'err' : '');
+      const cells = tr.querySelectorAll('td');
+      cells[2].textContent = address || '—';
+      cells[3].textContent = (lat != null && lng != null) ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : '—';
+      cells[4].innerHTML = status === 'ok'
+        ? `<span class="status ok">✓</span>`
+        : status === 'err' ? `<span class="status err">✗</span>`
+        : `<span class="status pending">⏳</span>`;
+    }
+
+    function addMarker(s) {
+      if (!map) return;
+      const m = new google.maps.Marker({
+        position: { lat: s.lat, lng: s.lng },
+        map,
+        title: s.school,
+        label: { text: String(SCHOOLS.indexOf(s) + 1), color: '#FFFEFB', fontSize: '11px', fontWeight: '600' },
+      });
+      markers.push(m);
+    }
+
+    function clearMarkers() {
+      markers.forEach(m => m.setMap(null));
+      markers.length = 0;
+    }
+
+    function geocodeOne(query) {
+      return new Promise((resolve, reject) => {
+        geocoder.geocode({ address: query, region: 'pl', componentRestrictions: { country: 'PL' } }, (results, status) => {
+          if (status === 'OK' && results && results[0]) resolve(results[0]);
+          else reject(new Error(status));
+        });
+      });
+    }
+
+    async function geocodeAll() {
+      if (running) return;
+      running = true;
+      goBtn.disabled = true;
+      goBtn.textContent = '⏳ Pracuję…';
+      log(`Start: ${SCHOOLS.length} szkół, throttle 250ms`);
+      let ok = 0, err = 0, skip = 0;
+      for (let i = 0; i < SCHOOLS.length; i++) {
+        const s = SCHOOLS[i];
+        if (typeof s.lat === 'number' && typeof s.lng === 'number') {
+          skip++;
+          log(`[${i + 1}/${SCHOOLS.length}] ⊘ skip: ${s.school} (już ma lat/lng)`);
+          continue;
+        }
+        const queries = [
+          `${s.school}, ${s.district}, Warszawa`,
+          `${s.school}, Warszawa`,
+        ];
+        let found = null;
+        let lastErr = null;
+        for (const q of queries) {
+          try {
+            found = await geocodeOne(q);
+            break;
+          } catch (e) {
+            lastErr = e;
+          }
+        }
+        if (found) {
+          const loc = found.geometry.location;
+          const lat = loc.lat();
+          const lng = loc.lng();
+          setRow(i, { status: 'ok', address: found.formatted_address, lat, lng });
+          addMarker(s);
+          ok++;
+          log(`[${i + 1}/${SCHOOLS.length}] ✓ ${s.school} → ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } else {
+          setRow(i, { status: 'err', address: `BŁĄD: ${lastErr ? lastErr.message : 'unknown'}` });
+          err++;
+          log(`[${i + 1}/${SCHOOLS.length}] ✗ ${s.school} — ${lastErr ? lastErr.message : 'unknown'}`);
+        }
+        progressEl.textContent = `${i + 1} / ${SCHOOLS.length}`;
+        await new Promise(r => setTimeout(r, 250));
+      }
+      log(`Koniec: ${ok} OK, ${err} błędów, ${skip} pominiętych. Kliknij "Pobierz data.js"`);
+      running = false;
+      goBtn.disabled = false;
+      goBtn.textContent = '▶ Geocode all';
+      dlBtn.disabled = ok + skip === 0;
+      if (ok > 0 && markers.length) {
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach(m => bounds.extend(m.getPosition()));
+        map.fitBounds(bounds, 40);
+      }
+    }
+
+    function download() {
+      // Generuj treść data.js w formacie window.SCHOOLS = [...];
+      // Usuń pomocnicze pole _foundAddress przed serializacją.
+      const clean = SCHOOLS.map(s => {
+        const { _foundAddress, ...rest } = s;
+        return rest;
+      });
+      const content = 'window.SCHOOLS = ' + JSON.stringify(clean, null, 2) + ';\n';
+      const blob = new Blob([content], { type: 'text/javascript;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data.js';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      log('⬇ Pobrano data.js — zapisz go w site\\data.js (nadpisując oryginał)');
+    }
+
+    function resetAll() {
+      if (!confirm('Usunąć wszystkie pobrane lat/lng z pamięci sesji? Plik data.js na dysku zostanie nietknięty.')) return;
+      SCHOOLS.forEach(s => { delete s.lat; delete s.lng; delete s._foundAddress; });
+      clearMarkers();
+      renderTable();
+      log('Reset.');
+    }
+
+    goBtn.addEventListener('click', geocodeAll);
+    dlBtn.addEventListener('click', download);
+    resetBtn.addEventListener('click', resetAll);
+
+    // Init: load Maps JS
+    window.__initGoogleMapForGeocode = function () {
+      geocoder = new google.maps.Geocoder();
+      map = new google.maps.Map(document.getElementById('miniMap'), {
+        center: { lat: 52.231, lng: 21.006 },
+        zoom: 10,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+      });
+      // Kobyłka marker
+      new google.maps.Marker({
+        position: { lat: 52.318, lng: 21.220 },
+        map,
+        title: 'Kobyłka',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 9,
+          fillColor: '#1F1B16',
+          fillOpacity: 1,
+          strokeColor: '#FFFEFB',
+          strokeWeight: 3,
+        },
+      });
+      // Replay any already geocoded schools onto the map
+      SCHOOLS.forEach(s => { if (typeof s.lat === 'number' && typeof s.lng === 'number') addMarker(s); });
+      log('Mapa gotowa.');
+    };
+
+    function loadMaps() {
+      if (!KEY || KEY === 'TWOJ_KLUCZ_TUTAJ') return;
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(KEY)}&loading=async&callback=__initGoogleMapForGeocode&v=weekly&language=pl&region=PL`;
+      s.onerror = () => log('BŁĄD: nie udało się załadować Google Maps SDK');
+      document.head.appendChild(s);
+    }
+
+    renderTable();
+    loadMaps();
+    log(`Załadowano ${SCHOOLS.length} szkół z site/data.js`);
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Szkoły dla syna | Warszawa</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Warszawa · licea i technika · preferencje rekrutacyjne</p>
+      <h1>Szkoły dla syna</h1>
+      <p class="lead">Jednolita prezentacja szkół z rankingiem atrakcyjności, ryzykiem punktowym, galeriami i argumentem „dlaczego ta szkoła”.</p>
+    </div>
+    <div class="summary">
+      <strong>Cel</strong>
+      <span>politechnika albo medycyna</span>
+      <strong>Założenie</strong>
+      <span>ok. 168 pkt</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls">
+      <input id="search" type="search" placeholder="Szukaj szkoły, dzielnicy, profilu..." />
+      <select id="district"></select>
+      <select id="risk">
+        <option value="">Wszystkie ryzyka</option>
+        <option>bardzo ambitna</option>
+        <option>ambitna</option>
+        <option>na granicy</option>
+        <option>realna</option>
+        <option>bezpieczna</option>
+      </select>
+    </section>
+    <section id="schoolGrid" class="grid"></section>
+  </main>
+
+  <footer>
+    <p>Źródła: lokalny arkusz progów 2023-2025, oficjalne strony szkół, Wikimedia Commons, wyszukiwarki opinii/forum. Opinie internetowe są wskazówką do dalszej weryfikacji, nie faktem rankingowym.</p>
+  </footer>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

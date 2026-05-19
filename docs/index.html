@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Szkoły dla syna · Warszawa 2026</title>
+  <meta name="description" content="Spersonalizowany ranking warszawskich liceów i techników dla 8-klasisty z Kobyłki — profil politechnika / medycyna, ok. 168 pkt." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Przeskocz do treści</a>
+
+  <div id="apiWarning" class="api-warning" hidden>
+    <div class="api-warning__inner">
+      <strong>Brak klucza Google Maps API.</strong>
+      <span>Mapa i czasy dojazdu nie zadziałają. Skopiuj <code>config.example.js</code> jako <code>config.local.js</code>, wklej swój klucz i odśwież. Pełna instrukcja w <code>site-v2/SETUP.md</code>.</span>
+    </div>
+  </div>
+
+  <header class="topbar" id="top">
+    <div class="topbar__brand">
+      <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Warszawa · rekrutacja 2026</p>
+      <h1>Szkoły <em>dla&nbsp;syna</em></h1>
+      <p class="lead">Spersonalizowany przegląd liceów i techników w Warszawie z punktu widzenia 8-klasisty z Kobyłki — cel: politechnika albo medycyna, założenie ok. 168 punktów rekrutacyjnych.</p>
+    </div>
+    <aside class="topbar__meta" aria-label="Założenia rankingu">
+      <dl>
+        <div><dt>Cel</dt><dd>politechnika · medycyna</dd></div>
+        <div><dt>Punkty</dt><dd>≈ 168</dd></div>
+        <div><dt>Skąd</dt><dd>Kobyłka</dd></div>
+        <div><dt>Liczba szkół</dt><dd id="statSchools">—</dd></div>
+      </dl>
+    </aside>
+  </header>
+
+  <nav class="toolbar" aria-label="Filtry i widoki">
+    <div class="toolbar__row toolbar__row--primary">
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Szukaj szkoły, dzielnicy, profilu…" autocomplete="off" aria-label="Szukaj" />
+        <kbd>/</kbd>
+      </div>
+      <div class="views" role="tablist" aria-label="Tryb widoku">
+        <button class="view-btn is-active" data-view="cards" role="tab" aria-selected="true" title="Karty (1)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+          <span>Karty</span>
+        </button>
+        <button class="view-btn" data-view="list" role="tab" aria-selected="false" title="Lista (2)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span>Lista</span>
+        </button>
+        <button class="view-btn" data-view="table" role="tab" aria-selected="false" title="Tabela (3)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 10h18M10 4v16"/></svg>
+          <span>Tabela</span>
+        </button>
+        <button class="view-btn" data-view="map" role="tab" aria-selected="false" title="Mapa (4)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
+          <span>Mapa</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar__row toolbar__row--secondary">
+      <div class="chips" id="chipsDistrict" role="group" aria-label="Dzielnica"></div>
+      <div class="chips" id="chipsRisk" role="group" aria-label="Ryzyko punktowe"></div>
+      <div class="chips" id="chipsProfile" role="group" aria-label="Profil"></div>
+      <div class="chips chips--small" id="chipsCommute" role="group" aria-label="Dojazd z Kobyłki (jakościowo)"></div>
+      <div class="chips chips--small" id="chipsTime" role="group" aria-label="Czas dojazdu rano (minuty)"></div>
+    </div>
+
+    <div class="toolbar__row toolbar__row--priority">
+      <div class="chips chips--priority" id="chipsPriority" role="group" aria-label="Twój ranking klas — klikaj profile w kolejności preferencji"></div>
+    </div>
+
+    <div class="toolbar__row toolbar__row--sort">
+      <div class="chips chips--sort" id="chipsSort" role="group" aria-label="Sortowanie — klikaj kryteria w kolejności priorytetu"></div>
+      <button class="ghost-btn" id="resetBtn" type="button" title="Wyczyść filtry, ranking i sortowanie">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M6 18 18 6"/></svg>
+        <span>Wyczyść</span>
+      </button>
+    </div>
+  </nav>
+
+  <main id="main">
+    <p class="results" id="results" aria-live="polite"></p>
+    <section id="viewCards" class="view view--cards" data-view-pane="cards"></section>
+    <section id="viewList" class="view view--list" data-view-pane="list" hidden></section>
+    <section id="viewTable" class="view view--table" data-view-pane="table" hidden>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="th-pick" aria-label="Wybór"></th>
+              <th data-sort="alpha">Szkoła</th>
+              <th data-sort="district">Dzielnica</th>
+              <th data-sort="bestScore" class="num">Atr.</th>
+              <th data-sort="risk">Ryzyko</th>
+              <th data-sort="prog" class="num">Próg ’25</th>
+              <th data-sort="ranking" class="num">Rank.</th>
+              <th data-sort="matura" class="num">Matura</th>
+              <th>Profile</th>
+              <th>Dojazd</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+    <section id="viewMap" class="view view--map" data-view-pane="map" hidden>
+      <div class="map-shell">
+        <div class="map-frame">
+          <div id="googleMap" aria-label="Mapa Warszawy z Kobyłką i szkołami"></div>
+          <div id="mapPlaceholder" class="map-placeholder">
+            <p>Ładuję Google Maps…</p>
+          </div>
+        </div>
+        <aside class="map-legend">
+          <h3>Szybki filtr czasu</h3>
+          <p class="map-quick-hint">Pokaż tylko szkoły z dojazdem rano nie dłuższym niż:</p>
+          <div class="map-quick-filters" id="mapQuickFilters"></div>
+
+          <h3 style="margin-top:18px">Dzielnice</h3>
+          <p>Kliknij dzielnicę, żeby zawęzić listę szkół. Markery na mapie pokazują dokładne lokalizacje. Kliknij marker, żeby otworzyć minikartę.</p>
+          <ul id="mapDistrictList"></ul>
+          <p class="map-hint">Filtry współpracują: szybki czas + dzielnica + inne chipy u góry. Reset = "Wyczyść" w toolbarze.</p>
+        </aside>
+      </div>
+    </section>
+
+    <p class="empty" id="empty" hidden>Brak szkół spełniających kryteria. <button class="text-btn" type="button" id="emptyReset">Wyczyść filtry</button></p>
+  </main>
+
+  <aside class="compare-drawer" id="compareDrawer" hidden aria-live="polite">
+    <div class="compare-drawer__inner">
+      <div class="compare-drawer__lead">
+        <strong id="compareCount">0</strong>
+        <span>w porównaniu</span>
+        <p class="muted">Wybierz do 3 szkół, żeby zobaczyć je obok siebie.</p>
+      </div>
+      <div class="compare-drawer__chips" id="compareChips"></div>
+      <div class="compare-drawer__actions">
+        <button class="ghost-btn" type="button" id="compareClear">Wyczyść</button>
+        <button class="primary-btn" type="button" id="compareOpen">Porównaj <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="modal" id="modalCompare" hidden role="dialog" aria-modal="true" aria-labelledby="modalCompareTitle">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel modal__panel--wide" role="document">
+      <header class="modal__head">
+        <div>
+          <p class="eyebrow"><span class="dot"></span> Porównanie</p>
+          <h2 id="modalCompareTitle">Szkoły obok siebie</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close aria-label="Zamknij">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M6 18 18 6"/></svg>
+        </button>
+      </header>
+      <div class="modal__body" id="compareBody"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalDetail" hidden role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="document">
+      <header class="modal__head">
+        <div>
+          <p class="eyebrow" id="modalDetailEyebrow"><span class="dot"></span> Szczegóły</p>
+          <h2 id="modalDetailTitle">—</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close aria-label="Zamknij">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M6 18 18 6"/></svg>
+        </button>
+      </header>
+      <div class="modal__body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Źródła: lokalny arkusz progów 2023-2025, oficjalne strony szkół, Wikimedia Commons, wyszukiwarki opinii/forum. Opinie internetowe są wskazówką do dalszej weryfikacji, nie faktem rankingowym. <span class="kbd-hint">Skróty: <kbd>/</kbd> szukaj · <kbd>1-4</kbd> widoki · <kbd>c</kbd> porównaj · <kbd>Esc</kbd> zamknij</span></p>
+  </footer>
+
+  <!-- Konfiguracja lokalna z kluczem Google Maps API (poza repo). -->
+  <script src="config.local.js" onerror="window.__configMissing=true"></script>
+  <!-- Pojedyncze źródło danych: site/data.js. Wystarczy edytować tylko jeden plik. -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
